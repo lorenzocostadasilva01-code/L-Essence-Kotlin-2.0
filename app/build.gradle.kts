@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -76,4 +77,9 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.0") // Ou versão mais recente
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+
+    val room_version = "3.0.3"
+
+    implementation("androidx.room3:room3-runtime:$room_version")
+    ksp("androidx.room3:room3-compiler:$room_version")
 }
