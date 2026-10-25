@@ -40,8 +40,9 @@ fun ListaVinhosScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
 
+    val vinhos by viewModel.vinhos.collectAsState()
     // Ordenação dinâmica: Favoritos/Reservados no TOPO da lista
-    val vinhosOrdenados = viewModel.vinhos.sortedWith(
+    val vinhosOrdenados = vinhos.sortedWith(
         compareByDescending<Vinho> { it.isFavorito }.thenByDescending { it.isReservado }
     )
 

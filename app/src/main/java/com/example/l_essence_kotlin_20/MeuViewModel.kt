@@ -1,276 +1,164 @@
 package com.example.l_essence_kotlin_20
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.example.l_essence_kotlin_20.ui.dao.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class MeuViewModel : ViewModel() {
+class MeuViewModel(
+    private val userDao: UserDao,
+    private val pratoDao: PratoDAO,
+    private val vinhoDao: VinhoDAO,
+    private val metodoPagamentoDao: MetodoPagamentoDAO,
+    private val cartItemDao: CartItemDao
+) : ViewModel() {
 
-    // Dados do Perfil do Usuário
-    var nomeUsuario by mutableStateOf("Nome Qualquer da Silva")
-        private set
+    // --- ESTADOS REATIVOS (StateFlow) ---
+    // O UI vai observar essas variáveis usando .collectAsState()
 
-    var emailUsuario by mutableStateOf("Qualquer da Silva@lessence-restaurant.com")
-        private set
+    val usuario: StateFlow<User?> = userDao.observarUsuario()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    var enderecoUsuario by mutableStateOf("Av. Paulista, 1000, Apto 82 - Jardins, São Paulo - SP")
-        private set
+    val pratos: StateFlow<List<Prato>> = pratoDao.observarTodos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    var telefoneUsuario by mutableStateOf("(67) 98765-4321")
-        private set
+    val vinhos: StateFlow<List<Vinho>> = vinhoDao.observarTodos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val metodosPagamento: StateFlow<List<MetodoPagamento>> = metodoPagamentoDao.observarTodos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val carrinho: StateFlow<List<CartItem>> = cartItemDao.observarTodos()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val totalCarrinho: StateFlow<Double> = cartItemDao.observarTotal()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val quantidadeCarrinho: StateFlow<Int> = cartItemDao.observarQuantidadeTotal()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    // --- HELPER GETTERS PARA UI ---
+    val nomeUsuario: String get() = usuario.value?.nome ?: "Gourmet Guest"
+    val emailUsuario: String get() = usuario.value?.email ?: "guest@lessence.com"
+    val telefoneUsuario: String get() = usuario.value?.telefone ?: "(11) 99999-8888"
+    val enderecoUsuario: String get() = usuario.value?.endereco ?: "Alameda Gourmet, 1000"
+
+    fun obterPratoPorId(id: Int): Prato? = pratos.value.find { it.id == id }
+    fun obterVinhoPorId(id: Int): Vinho? = vinhos.value.find { it.id == id }
+    fun calcularTotalCarrinho(): Double = totalCarrinho.value
+    fun quantidadeTotalItensCarrinho(): Int = quantidadeCarrinho.value
+
+    // --- AÇÕES DO USUÁRIO ---
     fun atualizarPerfil(nome: String, email: String, endereco: String, telefone: String) {
-        if (nome.isNotBlank()) nomeUsuario = nome.trim()
-        if (email.isNotBlank()) emailUsuario = email.trim()
-        if (endereco.isNotBlank()) enderecoUsuario = endereco.trim()
-        if (telefone.isNotBlank()) telefoneUsuario = telefone.trim()
+        viewModelScope.launch {
+            val user = User(
+                uid = 1, // Sempre 1 para perfil único
+                nome = nome.ifBlank { usuario.value?.nome ?: "" },
+                email = email.ifBlank { usuario.value?.email ?: "" },
+                endereco = endereco.ifBlank { usuario.value?.endereco ?: "" },
+                telefone = telefone.ifBlank { usuario.value?.telefone ?: "" }
+            )
+            userDao.salvar(user)
+        }
     }
 
-    // Lista 1: Menu de Pratos Gourmets
-    val pratos = mutableStateListOf(
-        Prato(
-            id = 1,
-            nome = "Minestrone Gourmet Traveller",
-            chef = "Chef Jean-Luc",
-            categoria = "Entradas",
-            precoBase = 120.00,
-            ingredientes = "Legumes orgânicos frescos, caldo aromático de ervas finas, massa artesanal e lascas de parmesão reggiano 36 meses.",
-            harmonizacaoVinho = "Chardonnay Riserva",
-            tempoPreparoMinutos = 20,
-            avaliacao = 4.9,
-            descricao = "Uma releitura sofisticada do clássico italiano, preparada com técnicas modernas de gastronomia e vegetais da horta orgânica."
-        ),
-        Prato(
-            id = 2,
-            nome = "Rigatoni alla Matriciana",
-            chef = "Chef Jean-Luc",
-            categoria = "Pratos Principais",
-            precoBase = 95.00,
-            ingredientes = "Massa rigatoni fresca, molho de tomate San Marzano DOP, guanciale artesanal crocante e queijo pecorino romano.",
-            harmonizacaoVinho = "Chianti Classico Riserva",
-            tempoPreparoMinutos = 25,
-            avaliacao = 4.8,
-            descricao = "Sabor autêntico e inconfundível. O guanciale dourado no ponto perfeito funde-se ao molho encorpado de tomates italianos."
-        ),
-        Prato(
-            id = 3,
-            nome = "Risotto de Cogumelos Porcini & Trufas",
-            chef = "Chef Jean-Luc",
-            categoria = "Pratos Principais",
-            precoBase = 140.00,
-            ingredientes = "Arroz Carnaroli, cogumelos Porcini frescos, azeite de trufas brancas de Alba e manteiga clarificada.",
-            harmonizacaoVinho = "Barolo DOCG 2016",
-            tempoPreparoMinutos = 30,
-            avaliacao = 5.0,
-            descricao = "Cremoso, aromático e inesquecível. Uma explosão de sabores terrosos com o toque inconfundível das trufas de Alba."
-        )
-    )
-
-    // Lista 2: Carta de Vinhos Finos
-    val vinhos = mutableStateListOf(
-        Vinho(
-            id = 1,
-            rotulo = "RAR Pinot Noir",
-            vinicola = "Vinícola RAR",
-            safra = 2018,
-            paisOrigem = "Brasil / Campos de Cima da Serra",
-            tipo = "Tinto Fino",
-            precoGarrafa = 80.00,
-            teorAlcoolico = "13.0%",
-            notasDegustacao = "Aromas de frutas vermelhas maduras, toque sutil de especiarias e carvalho francês.",
-            avaliacao = 4.8,
-            descricao = "Vinho elegante e bem estruturado, com taninos aveludados e excelente persistência no paladar."
-        ),
-        Vinho(
-            id = 2,
-            rotulo = "Château Margaux Grand Cru",
-            vinicola = "Château Margaux",
-            safra = 2015,
-            paisOrigem = "França / Bordeaux",
-            tipo = "Tinto Encorpado",
-            precoGarrafa = 450.00,
-            teorAlcoolico = "13.5%",
-            notasDegustacao = "Groselha preta, cassis, notas de tabaco, cedro e violetas. Complexidade incomparável.",
-            avaliacao = 5.0,
-            descricao = "Um dos mais prestigiados rótulos do mundo. Envelhecido em barricas de carvalho novo por 18 meses."
-        ),
-        Vinho(
-            id = 3,
-            rotulo = "Dom Pérignon Vintage",
-            vinicola = "Moët & Chandon",
-            safra = 2013,
-            paisOrigem = "França / Champagne",
-            tipo = "Espumante Brut",
-            precoGarrafa = 320.00,
-            teorAlcoolico = "12.5%",
-            notasDegustacao = "Frutas cítricas cristalizadas, brioche tostado, mineralidade vibrante e borbulhas finíssimas.",
-            avaliacao = 4.9,
-            descricao = "A essência do luxo e da celebração. Equilíbrio perfeito entre maturidade e vivacidade."
-        )
-    )
-
-    // Métodos de Pagamento Cadastrados
-    val metodosPagamento = mutableStateListOf(
-        MetodoPagamento(
-            id = 1,
-            marca = "VISA",
-            numeroMascarado = "**** **** 2222",
-            nomeTitular = "ANA SILVA",
-            validade = "12/28",
-            isPadrao = true
-        ),
-        MetodoPagamento(
-            id = 2,
-            marca = "MASTERCARD",
-            numeroMascarado = "**** **** 5555",
-            nomeTitular = "ANA SILVA",
-            validade = "08/27",
-            isPadrao = false
-        )
-    )
-
-    // Carrinho de compras do restaurante
-    val carrinho = mutableStateListOf<CartItem>()
-
-    // --- Ações de Pratos ---
-    fun adicionarPrato(
-        nome: String,
-        categoria: String,
-        precoBase: Double,
-        ingredientes: String,
-        harmonizacaoVinho: String,
-        descricao: String
-    ) {
-        val novoId = (pratos.maxOfOrNull { it.id } ?: 0) + 1
-        pratos.add(
-            Prato(
-                id = novoId,
-                nome = nome,
-                categoria = categoria.ifBlank { "Pratos Principais" },
-                precoBase = precoBase,
-                ingredientes = ingredientes.ifBlank { "Ingredientes selecionados pelo Chef" },
-                harmonizacaoVinho = harmonizacaoVinho.ifBlank { "Vinho Tinto L'Essence" },
-                descricao = descricao.ifBlank { "Prato exclusivo da alta gastronomia L'Essence." }
+    // --- AÇÕES DE PRATOS ---
+    fun adicionarPrato(nome: String, categoria: String, precoBase: Double, ingredientes: String, harmonizacaoVinho: String, descricao: String) {
+        viewModelScope.launch {
+            pratoDao.inserir(
+                Prato(
+                    nome = nome,
+                    categoria = categoria.ifBlank { "Pratos Principais" },
+                    precoBase = precoBase,
+                    ingredientes = ingredientes.ifBlank { "Ingredientes selecionados pelo Chef" },
+                    harmonizacaoVinho = harmonizacaoVinho.ifBlank { "Vinho Tinto L'Essence" },
+                    descricao = descricao.ifBlank { "Prato exclusivo da alta gastronomia." }
+                )
             )
-        )
+        }
     }
 
     fun removerPrato(id: Int) {
-        val prato = pratos.find { it.id == id }
-        pratos.removeAll { it.id == id }
-        if (prato != null) {
-            carrinho.removeAll { it.titulo == prato.nome }
+        viewModelScope.launch {
+            pratoDao.removerPorId(id)
+            cartItemDao.removerPorProduto(produtoId = id, tipoProduto = "Prato")
         }
     }
 
     fun toggleFavoritoPrato(id: Int) {
-        val index = pratos.indexOfFirst { it.id == id }
-        if (index != -1) {
-            val actual = pratos[index]
-            pratos[index] = actual.copy(isFavorito = !actual.isFavorito)
+        viewModelScope.launch { pratoDao.alternarFavorito(id) }
+    }
+
+    suspend fun buscarPratoPorId(id: Int): Prato? {
+        return pratoDao.buscarPorId(id)
+    }
+
+    // --- AÇÕES DE VINHOS ---
+    fun adicionarVinho(rotulo: String, vinicola: String, safra: Int, paisOrigem: String, tipo: String, precoGarrafa: Double, notasDegustacao: String, descricao: String) {
+        viewModelScope.launch {
+            vinhoDao.inserir(
+                Vinho(
+                    rotulo = rotulo,
+                    vinicola = vinicola.ifBlank { "Adega L'Essence" },
+                    safra = if (safra > 0) safra else 2020,
+                    paisOrigem = paisOrigem.ifBlank { "França" },
+                    tipo = tipo.ifBlank { "Tinto" },
+                    precoGarrafa = precoGarrafa,
+                    notasDegustacao = notasDegustacao.ifBlank { "Aromas frutados e carvalho" },
+                    descricao = descricao.ifBlank { "Rótulo selecionado pelos sommeliers." }
+                )
+            )
         }
     }
 
-    fun obterPratoPorId(id: Int): Prato? {
-        return pratos.find { it.id == id }
-    }
-
-    // --- Ações de Vinhos ---
-    fun adicionarVinho(
-        rotulo: String,
-        vinicola: String,
-        safra: Int,
-        paisOrigem: String,
-        tipo: String,
-        precoGarrafa: Double,
-        notasDegustacao: String,
-        descricao: String
-    ) {
-        val novoId = (vinhos.maxOfOrNull { it.id } ?: 0) + 1
-        vinhos.add(
-            Vinho(
-                id = novoId,
-                rotulo = rotulo,
-                vinicola = vinicola.ifBlank { "Adega L'Essence" },
-                safra = if (safra > 0) safra else 2020,
-                paisOrigem = paisOrigem.ifBlank { "França" },
-                tipo = tipo.ifBlank { "Tinto" },
-                precoGarrafa = precoGarrafa,
-                notasDegustacao = notasDegustacao.ifBlank { "Aromas frutados e carvalho" },
-                descricao = descricao.ifBlank { "Rótulo exclusivo selecionado por nossos sommeliers." }
-            )
-        )
-    }
-
     fun removerVinho(id: Int) {
-        val vinho = vinhos.find { it.id == id }
-        vinhos.removeAll { it.id == id }
-        if (vinho != null) {
-            carrinho.removeAll { it.titulo == vinho.rotulo }
+        viewModelScope.launch {
+            vinhoDao.removerPorId(id)
+            cartItemDao.removerPorProduto(produtoId = id, tipoProduto = "Vinho")
         }
     }
 
     fun toggleReservadoVinho(id: Int) {
-        val index = vinhos.indexOfFirst { it.id == id }
-        if (index != -1) {
-            val actual = vinhos[index]
-            vinhos[index] = actual.copy(isReservado = !actual.isReservado)
-        }
+        viewModelScope.launch { vinhoDao.alternarReservado(id) }
     }
 
     fun toggleFavoritoVinho(id: Int) {
-        val index = vinhos.indexOfFirst { it.id == id }
-        if (index != -1) {
-            val actual = vinhos[index]
-            vinhos[index] = actual.copy(isFavorito = !actual.isFavorito)
+        viewModelScope.launch { vinhoDao.alternarFavorito(id) }
+    }
+
+    suspend fun buscarVinhoPorId(id: Int): Vinho? {
+        return vinhoDao.buscarPorId(id)
+    }
+
+    // --- AÇÕES DE PAGAMENTO ---
+    fun adicionarMetodoPagamento(marca: String, numeroCompleto: String, nomeTitular: String, validade: String) {
+        viewModelScope.launch {
+            val ultimos4 = if (numeroCompleto.length >= 4) numeroCompleto.takeLast(4) else "0000"
+            val numeroMascarado = "**** **** $ultimos4"
+            val count = metodoPagamentoDao.contar()
+
+            metodoPagamentoDao.inserir(
+                MetodoPagamento(
+                    marca = marca.uppercase(),
+                    numeroMascarado = numeroMascarado,
+                    nomeTitular = nomeTitular.uppercase(),
+                    validade = validade,
+                    isPadrao = count == 0 // Primeiro cartão vira padrão automaticamente
+                )
+            )
         }
     }
 
-    fun obterVinhoPorId(id: Int): Vinho? {
-        return vinhos.find { it.id == id }
-    }
-
-    // --- Ações de Métodos de Pagamento ---
-    fun adicionarMetodoPagamento(
-        marca: String,
-        numeroCompleto: String,
-        nomeTitular: String,
-        validade: String
-    ) {
-        val ultimos4 = if (numeroCompleto.length >= 4) numeroCompleto.takeLast(4) else "0000"
-        val numeroMascarado = "**** **** $ultimos4"
-        val novoId = (metodosPagamento.maxOfOrNull { it.id } ?: 0) + 1
-
-        val eOPrimeiro = metodosPagamento.isEmpty()
-
-        metodosPagamento.add(
-            MetodoPagamento(
-                id = novoId,
+    fun editarMetodoPagamento(id: Int, marca: String, numeroCompleto: String, nomeTitular: String, validade: String) {
+        viewModelScope.launch {
+            metodoPagamentoDao.editar(
+                id = id,
                 marca = marca.uppercase(),
-                numeroMascarado = numeroMascarado,
-                nomeTitular = nomeTitular.uppercase(),
-                validade = validade,
-                isPadrao = eOPrimeiro
-            )
-        )
-    }
-
-    fun editarMetodoPagamento(
-        id: Int,
-        marca: String,
-        numeroCompleto: String,
-        nomeTitular: String,
-        validade: String
-    ) {
-        val index = metodosPagamento.indexOfFirst { it.id == id }
-        if (index != -1) {
-            val ultimos4 = if (numeroCompleto.length >= 4) numeroCompleto.takeLast(4) else "0000"
-            val numeroMascarado = if (numeroCompleto.contains("*")) metodosPagamento[index].numeroMascarado else "**** **** $ultimos4"
-            metodosPagamento[index] = metodosPagamento[index].copy(
-                marca = marca.uppercase(),
-                numeroMascarado = numeroMascarado,
+                numeroMascarado = if (numeroCompleto.contains("*")) numeroCompleto else "**** **** ${numeroCompleto.takeLast(4)}",
                 nomeTitular = nomeTitular.uppercase(),
                 validade = validade
             )
@@ -278,29 +166,24 @@ class MeuViewModel : ViewModel() {
     }
 
     fun removerMetodoPagamento(id: Int) {
-        metodosPagamento.removeAll { it.id == id }
-        if (metodosPagamento.isNotEmpty() && metodosPagamento.none { it.isPadrao }) {
-            metodosPagamento[0].isPadrao = true
+        viewModelScope.launch {
+            metodoPagamentoDao.removerPorId(id)
         }
     }
 
     fun selecionarMetodoPadrao(id: Int) {
-        metodosPagamento.forEach {
-            it.isPadrao = (it.id == id)
+        viewModelScope.launch {
+            metodoPagamentoDao.selecionarPadrao(id)
         }
     }
 
-    // --- Ações do Carrinho ---
+    // --- AÇÕES DE CARRINHO ---
     fun adicionarPratoAoCarrinho(prato: Prato, quantidade: Int = 1) {
-        val index = carrinho.indexOfFirst { it.titulo == prato.nome }
-        if (index != -1) {
-            val item = carrinho[index]
-            carrinho[index] = item.copy(quantidade = item.quantidade + quantidade)
-        } else {
-            val novoId = (carrinho.maxOfOrNull { it.id } ?: 0) + 1
-            carrinho.add(
+        viewModelScope.launch {
+            cartItemDao.adicionarOuIncrementar(
                 CartItem(
-                    id = novoId,
+                    produtoId = prato.id,
+                    tipoProduto = "Prato",
                     titulo = prato.nome,
                     categoriaOuTipo = prato.categoria,
                     quantidade = quantidade,
@@ -311,15 +194,11 @@ class MeuViewModel : ViewModel() {
     }
 
     fun adicionarVinhoAoCarrinho(vinho: Vinho, quantidade: Int = 1) {
-        val index = carrinho.indexOfFirst { it.titulo == vinho.rotulo }
-        if (index != -1) {
-            val item = carrinho[index]
-            carrinho[index] = item.copy(quantidade = item.quantidade + quantidade)
-        } else {
-            val novoId = (carrinho.maxOfOrNull { it.id } ?: 0) + 1
-            carrinho.add(
+        viewModelScope.launch {
+            cartItemDao.adicionarOuIncrementar(
                 CartItem(
-                    id = novoId,
+                    produtoId = vinho.id,
+                    tipoProduto = "Vinho",
                     titulo = vinho.rotulo,
                     categoriaOuTipo = "Vinho ${vinho.tipo}",
                     quantidade = quantidade,
@@ -330,31 +209,40 @@ class MeuViewModel : ViewModel() {
     }
 
     fun alterarQuantidadeCarrinho(cartItemId: Int, delta: Int) {
-        val index = carrinho.indexOfFirst { it.id == cartItemId }
-        if (index != -1) {
-            val item = carrinho[index]
-            val novaQtd = item.quantidade + delta
-            if (novaQtd > 0) {
-                carrinho[index] = item.copy(quantidade = novaQtd)
-            } else {
-                carrinho.removeAt(index)
-            }
+        viewModelScope.launch {
+            cartItemDao.alterarQuantidadePorId(cartItemId, delta)
+            cartItemDao.removerSeZerado(cartItemId)
         }
     }
 
     fun removerDoCarrinho(cartItemId: Int) {
-        carrinho.removeAll { it.id == cartItemId }
+        viewModelScope.launch {
+            cartItemDao.removerPorId(cartItemId)
+        }
     }
 
     fun limparCarrinho() {
-        carrinho.clear()
+        viewModelScope.launch {
+            cartItemDao.limpar()
+        }
     }
+}
 
-    fun calcularTotalCarrinho(): Double {
-        return carrinho.sumOf { it.precoTotal }
-    }
-
-    fun quantidadeTotalItensCarrinho(): Int {
-        return carrinho.sumOf { it.quantidade }
+// --- FACTORY PARA CRIAR O VIEWMODEL COM OS DAOs ---
+class MeuViewModelFactory(
+    private val db: AppDatabase
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MeuViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MeuViewModel(
+                userDao = db.userDao(),
+                pratoDao = db.pratoDao(),
+                vinhoDao = db.vinhoDao(),
+                metodoPagamentoDao = db.metodoPagamentoDao(),
+                cartItemDao = db.cartItemDao()
+            ) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

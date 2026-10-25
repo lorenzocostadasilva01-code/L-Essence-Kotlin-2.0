@@ -42,8 +42,9 @@ fun ListaPratosScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
 
+    val pratos by viewModel.pratos.collectAsState()
     // Ordenação dinâmica: Favoritos ficam no TOPO da lista
-    val pratosOrdenados = viewModel.pratos.sortedByDescending { it.isFavorito }
+    val pratosOrdenados = pratos.sortedByDescending { it.isFavorito }
 
     Scaffold(
         containerColor = backgroundColor,

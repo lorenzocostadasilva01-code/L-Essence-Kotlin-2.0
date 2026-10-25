@@ -37,8 +37,14 @@ fun PagamentoScreen(
     val goldAccent = Color(0xFFD4AF37)
     val textColor = Color(0xFF5A5A5A)
 
-    var idMetodoSelecionado by remember {
-        mutableStateOf(viewModel.metodosPagamento.firstOrNull { it.isPadrao }?.id ?: viewModel.metodosPagamento.firstOrNull()?.id ?: 1)
+    val metodosPagamento by viewModel.metodosPagamento.collectAsState()
+
+    var idMetodoSelecionado by remember(metodosPagamento) {
+        mutableStateOf(
+            metodosPagamento.firstOrNull { it.isPadrao }?.id
+                ?: metodosPagamento.firstOrNull()?.id
+                ?: 1
+        )
     }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
@@ -113,7 +119,7 @@ fun PagamentoScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (viewModel.metodosPagamento.isEmpty()) {
+            if (metodosPagamento.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -125,7 +131,7 @@ fun PagamentoScreen(
                     Text("Nenhum método cadastrado. Clique acima para gerenciar.", color = Color.Gray)
                 }
             } else {
-                viewModel.metodosPagamento.forEach { metodo ->
+                metodosPagamento.forEach { metodo ->
                     val isSelected = idMetodoSelecionado == metodo.id
 
                     Row(
@@ -171,7 +177,7 @@ fun PagamentoScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${metodo.nomeTitular} • Val. ${metodo.validade}",
+                                text = "${metodo.nomeTitular} - Val. ${metodo.validade}",
                                 color = textColor,
                                 fontSize = 12.sp
                             )

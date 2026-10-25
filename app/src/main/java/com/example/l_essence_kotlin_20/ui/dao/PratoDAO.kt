@@ -1,9 +1,10 @@
-package com.example.l_essence_kotlin_20
+package com.example.l_essence_kotlin_20.ui.dao
 
-import androidx.room3.Dao
-import androidx.room3.Insert
-import androidx.room3.OnConflictStrategy
-import androidx.room3.Query
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.example.l_essence_kotlin_20.Prato
 import kotlinx.coroutines.flow.Flow
 
 @Dao

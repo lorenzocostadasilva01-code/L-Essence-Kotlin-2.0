@@ -12,12 +12,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.RestaurantMenu
-import androidx.compose.material.icons.filled.WineBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,6 +37,12 @@ fun PerfilScreen(
     val badgeBackgroundColor = Color(0xFFE2E2D6)
     val goldAccent = Color(0xFFD4AF37)
     val textColor = Color(0xFF5A5A5A)
+
+    val user by viewModel.usuario.collectAsState()
+    val nomeUsuario = user?.nome ?: viewModel.nomeUsuario
+    val emailUsuario = user?.email ?: viewModel.emailUsuario
+    val telefoneUsuario = user?.telefone ?: viewModel.telefoneUsuario
+    val enderecoUsuario = user?.endereco ?: viewModel.enderecoUsuario
 
     var showEditarPerfilDialog by remember { mutableStateOf(false) }
 
@@ -125,7 +128,7 @@ fun PerfilScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = viewModel.nomeUsuario,
+                        text = nomeUsuario,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF333333)
@@ -184,7 +187,7 @@ fun PerfilScreen(
                 ItemInfoPerfilRow(
                     icon = Icons.Default.Email,
                     label = "E-mail:",
-                    valor = viewModel.emailUsuario,
+                    valor = emailUsuario,
                     goldAccent = goldAccent,
                     textColor = textColor
                 )
@@ -194,7 +197,7 @@ fun PerfilScreen(
                 ItemInfoPerfilRow(
                     icon = Icons.Default.Phone,
                     label = "Telefone:",
-                    valor = viewModel.telefoneUsuario,
+                    valor = telefoneUsuario,
                     goldAccent = goldAccent,
                     textColor = textColor
                 )
@@ -204,23 +207,22 @@ fun PerfilScreen(
                 ItemInfoPerfilRow(
                     icon = Icons.Default.LocationOn,
                     label = "Endereço de Entrega:",
-                    valor = viewModel.enderecoUsuario,
+                    valor = enderecoUsuario,
                     goldAccent = goldAccent,
                     textColor = textColor
                 )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
         }
     }
 
     if (showEditarPerfilDialog) {
         DialogEditarPerfil(
-            nomeAtual = viewModel.nomeUsuario,
-            emailAtual = viewModel.emailUsuario,
-            enderecoAtual = viewModel.enderecoUsuario,
-            telefoneAtual = viewModel.telefoneUsuario,
+            nomeAtual = nomeUsuario,
+            emailAtual = emailUsuario,
+            enderecoAtual = enderecoUsuario,
+            telefoneAtual = telefoneUsuario,
             onDismiss = { showEditarPerfilDialog = false },
             onSave = { nome, email, endereco, telefone ->
                 viewModel.atualizarPerfil(

@@ -240,7 +240,7 @@ fun LandPageScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Card Clicável: Recomendação do Chef -> Vai Direto para o Prato (ex: Risotto id = 3)
+        // Card Clicável: Recomendação do Chef
         Box(
             modifier = Modifier
                 .fillMaxWidth()

@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.WineBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +39,8 @@ fun CarrinhoScreen(
     val badgeBackgroundColor = Color(0xFFE2E2D6)
     val goldAccent = Color(0xFFD4AF37)
 
-    val totalCarrinho = viewModel.calcularTotalCarrinho()
+    val carrinho by viewModel.carrinho.collectAsState()
+    val totalCarrinho by viewModel.totalCarrinho.collectAsState()
     val totalFormatado = String.format(Locale("pt", "BR"), "R$ %.2f", totalCarrinho)
 
     Column(
@@ -74,7 +77,7 @@ fun CarrinhoScreen(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (viewModel.carrinho.isNotEmpty()) {
+                if (carrinho.isNotEmpty()) {
                     TextButton(onClick = { viewModel.limparCarrinho() }) {
                         Text(text = "Esvaziar", color = Color.Red, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
@@ -93,7 +96,7 @@ fun CarrinhoScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (viewModel.carrinho.isEmpty()) {
+        if (carrinho.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,7 +115,7 @@ fun CarrinhoScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items(viewModel.carrinho, key = { it.id }) { item ->
+                items(carrinho, key = { it.id }) { item ->
                     CartItemCardRow(
                         item = item,
                         cardBg = cardBackgroundColor,
@@ -223,7 +226,7 @@ fun CartItemCardRow(
                 color = Color(0xFF333333)
             )
             Text(
-                text = "${item.categoriaOuTipo} • " + String.format(Locale("pt", "BR"), "R$ %.2f un.", item.precoUnitario),
+                text = "${item.categoriaOuTipo} - " + String.format(Locale("pt", "BR"), "R$ %.2f un.", item.precoUnitario),
                 fontSize = 12.sp,
                 color = Color(0xFF5A5A5A)
             )

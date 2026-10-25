@@ -11,10 +11,13 @@ import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,10 +33,14 @@ import androidx.navigation.navArgument
 @Composable
 fun TelaInicial() {
     val navController = rememberNavController()
-    val viewModel: MeuViewModel = viewModel()
+    val context = LocalContext.current
+    val db = remember { AppDatabase.getDatabase(context) }
+    val viewModel: MeuViewModel = viewModel(factory = MeuViewModelFactory(db))
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val rotaAtual = backStackEntry?.destination?.route
+
+    val quantidadeCarrinho by viewModel.quantidadeCarrinho.collectAsState()
 
     // O BottomNavigation deve aparecer nas telas principais
     val mostrarBottomBar = rotaAtual in listOf(
@@ -51,7 +58,7 @@ fun TelaInicial() {
                 BottomNavBarCustom(
                     navController = navController,
                     rotaAtual = rotaAtual,
-                    quantidadeCarrinho = viewModel.quantidadeTotalItensCarrinho()
+                    quantidadeCarrinho = quantidadeCarrinho
                 )
             }
         }
@@ -73,7 +80,7 @@ fun TelaInicial() {
                 )
             }
 
-            // 2. Cardápio Unificado (Pratos Gourmets + Carta de Vinhos)
+            // 2. Cardápio Unificado
             composable(Rotas.Cardapio) {
                 CardapioScreen(
                     viewModel = viewModel,
@@ -88,7 +95,7 @@ fun TelaInicial() {
                 )
             }
 
-            // 3. Tela de Cadastro de Produto com Validação
+            // 3. Tela de Cadastro de Produto
             composable(Rotas.CadastroProduto) {
                 CadastroProdutoScreen(
                     viewModel = viewModel,
@@ -148,7 +155,7 @@ fun TelaInicial() {
                     onNavigateToEditarPagamento = { navController.navigate(Rotas.EditarPagamento) },
                     onNavigateToPerfil = { navController.navigate(Rotas.Perfil) },
                     onPaymentSuccess = {
-                        viewModel.limparCarrinho() // Esvazia o carrinho ao concluir o pagamento!
+                        viewModel.limparCarrinho()
                         navController.navigate(Rotas.LandPage) {
                             popUpTo(Rotas.LandPage) { inclusive = true }
                         }
@@ -156,7 +163,7 @@ fun TelaInicial() {
                 )
             }
 
-            // 8. Tela de Gerenciar/Editar Formas de Pagamento
+            // 8. Editar Pagamento
             composable(Rotas.EditarPagamento) {
                 EditarPagamentoScreen(
                     viewModel = viewModel,

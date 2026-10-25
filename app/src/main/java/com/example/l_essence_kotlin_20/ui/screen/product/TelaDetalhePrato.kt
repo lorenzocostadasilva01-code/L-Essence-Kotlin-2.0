@@ -33,7 +33,8 @@ fun DetalhePratoScreen(
     viewModel: MeuViewModel,
     onBack: () -> Unit
 ) {
-    val prato = viewModel.obterPratoPorId(pratoId)
+    val pratos by viewModel.pratos.collectAsState()
+    val prato = pratos.find { it.id == pratoId }
 
     val backgroundColor = Color(0xFFFFFFE4)
     val cardBackgroundColor = Color(0xFFECECE3)
@@ -187,7 +188,7 @@ fun DetalhePratoScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Sugestão de Harmonização com Vinho (Diferencial da Aula)
+            // Sugestão de Harmonização com Vinho
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

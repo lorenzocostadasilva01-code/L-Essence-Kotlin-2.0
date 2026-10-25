@@ -1,8 +1,8 @@
 package com.example.l_essence_kotlin_20
 
-import androidx.room3.ColumnInfo
-import androidx.room3.Entity
-import androidx.room3.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 @Entity(tableName = "vinho")
 data class Vinho(
@@ -11,7 +11,7 @@ data class Vinho(
     @ColumnInfo(name = "vinicola") val vinicola: String,
     @ColumnInfo(name = "safra") val safra: Int,
     @ColumnInfo(name = "pais_origem") val paisOrigem: String,
-    @ColumnInfo(name = "tipo") val tipo: String, // ex: "Tinto", "Branco", "Espumante"
+    @ColumnInfo(name = "tipo") val tipo: String,
     @ColumnInfo(name = "preco_garrafa") val precoGarrafa: Double,
     @ColumnInfo(name = "teor_alcoolico") val teorAlcoolico: String = "13.5%",
     @ColumnInfo(name = "notas_degustacao") val notasDegustacao: String,

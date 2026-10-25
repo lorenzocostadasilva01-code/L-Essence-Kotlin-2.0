@@ -1,10 +1,10 @@
 package com.example.l_essence_kotlin_20.ui.dao
 
-
-import androidx.room3.Dao
-import androidx.room3.Insert
-import androidx.room3.OnConflictStrategy
-import androidx.room3.Query
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
 import com.example.l_essence_kotlin_20.CartItem
 import kotlinx.coroutines.flow.Flow
 
@@ -40,6 +40,18 @@ interface CartItemDao {
         tipoProduto: String,
         quantidadeAdicional: Int
     ): Int
+
+    @Transaction
+    suspend fun adicionarOuIncrementar(item: CartItem) {
+        val rowsUpdated = incrementarQuantidadeProduto(
+            produtoId = item.produtoId,
+            tipoProduto = item.tipoProduto,
+            quantidadeAdicional = item.quantidade
+        )
+        if (rowsUpdated == 0) {
+            inserir(item)
+        }
+    }
 
     // 6. Alterar a quantidade por ID (Botões + e - no carrinho)
     @Query("UPDATE cart_item SET quantidade = quantidade + :delta WHERE id = :id")

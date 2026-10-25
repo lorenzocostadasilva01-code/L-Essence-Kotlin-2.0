@@ -31,7 +31,8 @@ fun DetalheVinhoScreen(
     viewModel: MeuViewModel,
     onBack: () -> Unit
 ) {
-    val vinho = viewModel.obterVinhoPorId(vinhoId)
+    val vinhos by viewModel.vinhos.collectAsState()
+    val vinho = vinhos.find { it.id == vinhoId }
 
     val backgroundColor = Color(0xFFFFFFE4)
     val cardBackgroundColor = Color(0xFFECECE3)

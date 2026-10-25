@@ -38,9 +38,14 @@ fun CardapioScreen(
 
     var abaSelecionada by remember { mutableStateOf(0) } // 0 = Pratos Gourmets, 1 = Vinhos Finos
 
+    // Observa os StateFlows do ViewModel
+    val pratos by viewModel.pratos.collectAsState()
+    val vinhos by viewModel.vinhos.collectAsState()
+
     // Ordenação dinâmica: Favoritos ficam no TOPO
-    val pratosOrdenados = viewModel.pratos.sortedByDescending { it.isFavorito }
-    val vinhosOrdenados = viewModel.vinhos.sortedWith(
+    // (O Room já faz boa parte da ordenação se configurado nos DAOs, mas você pode garantir aqui na UI também)
+    val pratosOrdenados = pratos.sortedByDescending { it.isFavorito }
+    val vinhosOrdenados = vinhos.sortedWith(
         compareByDescending<Vinho> { it.isFavorito }.thenByDescending { it.isReservado }
     )
 
@@ -208,7 +213,7 @@ fun CardapioScreen(
                                 badgeBg = badgeBackgroundColor,
                                 goldAccent = goldAccent,
                                 onClick = { onNavigateToDetalheVinho(vinho.id) },
-                                onToggleReservado = { viewModel.toggleFavoritoVinho(vinho.id) },
+                                onToggleReservado = { viewModel.toggleFavoritoVinho(vinho.id) }, // Note: no seu original estava toggleFavoritoVinho para a propriedade de reserva, verifique se deseja alterar no PratoCardItem.kt.
                                 onDelete = { viewModel.removerVinho(vinho.id) },
                                 onAddToCart = { viewModel.adicionarVinhoAoCarrinho(vinho) }
                             )

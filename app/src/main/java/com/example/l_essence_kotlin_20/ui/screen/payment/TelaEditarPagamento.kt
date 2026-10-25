@@ -10,7 +10,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -37,6 +36,8 @@ fun EditarPagamentoScreen(
     val badgeBackgroundColor = Color(0xFFE2E2D6)
     val goldAccent = Color(0xFFD4AF37)
     val textColor = Color(0xFF5A5A5A)
+
+    val metodosPagamento by viewModel.metodosPagamento.collectAsState()
 
     var showDialogNovoOuEditar by remember { mutableStateOf(false) }
     var metodoEdicaoAtual by remember { mutableStateOf<MetodoPagamento?>(null) }
@@ -101,7 +102,7 @@ fun EditarPagamentoScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            if (viewModel.metodosPagamento.isEmpty()) {
+            if (metodosPagamento.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -117,7 +118,7 @@ fun EditarPagamentoScreen(
                     )
                 }
             } else {
-                viewModel.metodosPagamento.forEach { metodo ->
+                metodosPagamento.forEach { metodo ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -151,7 +152,7 @@ fun EditarPagamentoScreen(
                                 color = Color(0xFF333333)
                             )
                             Text(
-                                text = "${metodo.nomeTitular} • Val. ${metodo.validade}",
+                                text = "${metodo.nomeTitular} - Val. ${metodo.validade}",
                                 fontSize = 12.sp,
                                 color = textColor
                             )
