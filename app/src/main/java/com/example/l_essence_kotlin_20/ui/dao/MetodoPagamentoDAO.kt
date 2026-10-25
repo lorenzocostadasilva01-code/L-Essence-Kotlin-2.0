@@ -8,7 +8,7 @@ import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-abstract class MetodoPagamentoDao {
+abstract class MetodoPagamentoDAO {
 
     // PagamentoScreen / EditarPagamentoScreen (padrão no topo)
     @Query("SELECT * FROM metodo_pagamento ORDER BY is_padrao DESC, id ASC")

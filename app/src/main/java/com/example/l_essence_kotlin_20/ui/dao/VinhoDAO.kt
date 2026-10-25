@@ -7,7 +7,7 @@ import androidx.room3.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface VinhoDao {
+interface VinhoDAO {
 
     // CardapioScreen / ListaVinhosScreen (favoritos e depois reservados no topo)
     @Query("SELECT * FROM vinho ORDER BY is_favorito DESC, is_reservado DESC, id ASC")
@@ -27,7 +27,7 @@ interface VinhoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirTodos(vinhos: List<Vinho>)
 
-    // Botão de coração (na lista, o parâmetro se chama onToggleReservado, mas chama toggleFavoritoVinho)
+    // Botão de coração
     @Query("UPDATE vinho SET is_favorito = NOT is_favorito WHERE id = :id")
     suspend fun alternarFavorito(id: Int)
 

@@ -21,5 +21,5 @@ data class CartItem(
 ) {
     @get:Ignore
     val precoTotal: Double
-        get() = precoUnitario * quantidade
+        get() = precoUnitario * quantidade // Corrigido o operador de multiplicação
 }

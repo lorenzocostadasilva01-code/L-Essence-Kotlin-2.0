@@ -7,9 +7,9 @@ import androidx.room3.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface PratoDao {
+interface PratoDAO {
 
-    // CardapioScreen / ListaPratosScreen (favoritos no topo, igual ao sortedByDescending atual)
+    // CardapioScreen / ListaPratosScreen (favoritos no topo)
     @Query("SELECT * FROM prato ORDER BY is_favorito DESC, id ASC")
     fun observarTodos(): Flow<List<Prato>>
 
